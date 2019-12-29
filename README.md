@@ -27,3 +27,13 @@ split by degree, x(0.0209), y(0.01797)
 ## time
 
 time step is 10 mins(600s), all order which are finished in less 1 time step are setted as 1 time step. (About 230281 orders)
+
+## price
+
+start step : 8
+
+base dis: 2 km
+
+price: 1.9 yuan/km
+
+night: 23:00 - 6:00 +20%

@@ -59,3 +59,11 @@ def random_tuple(a, b, n):
         for i in range(n):
             res.append(random_tuple(a, b))
         return res
+
+
+def map_str2int(a):
+    return list(map(int, a))
+
+
+def hamming_dis(x1, y1, x2, y2):
+    return abs(x1-x2) + abs(y1-y2)

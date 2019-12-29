@@ -6,7 +6,7 @@ import threading
 import numpy as np
 from pathlib import Path
 from gps_utils import gcj02wgs84
-from utils import write_csv, load_csv, raiseError
+from utils import write_csv, load_csv, raiseError, map_str2int
 
 
 lock = threading.Lock()
@@ -472,10 +472,6 @@ def formalize_order_data(path_dir="data/extracted"):
     print(len(all_orders))
     print(total_removed)
     print("Finish!")
-
-
-def map_str2int(a):
-    return list(map(int, a))
 
 
 def sort_orders(path_dir="data/process/order_201611.csv"):
