@@ -6,3 +6,5 @@ order_delay=2       # time step
 
 N_GIRD_X = 15
 N_GRID_Y = 17
+
+speed_car = 3       # move 3 in each time step

@@ -38,7 +38,7 @@ def write_csv(contents, csv_path, head_row=None):
         writer.writerows(contents)
 
 
-def random_tuple(a, b):
+def random_tuple_one(a, b):
     '''
     random sample from (0,0) to (a-1,b-1)
     '''
@@ -53,11 +53,11 @@ def random_tuple(a, b, n):
     if n < 1:
         raiseError("random number " + str(n))
     if n == 1:
-        return random_tuple(a, b)
+        return random_tuple_one(a, b)
     else:
         res = []
         for i in range(n):
-            res.append(random_tuple(a, b))
+            res.append(random_tuple_one(a, b))
         return res
 
 

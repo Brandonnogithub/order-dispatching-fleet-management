@@ -2,7 +2,7 @@ import config
 import numpy as np
 import random
 from random import sample
-from utils import load_csv, random_tuple, map_str2int, hamming_dis
+from utils import load_csv, random_tuple, map_str2int, hamming_dis, raiseError
 
 
 class Grid():
@@ -24,8 +24,18 @@ class Grid():
         if self.n >= len(self.orders):
             self.select = temp
         else:
-            self.select = sample(temp, n)
+            self.select = sample(temp, self.n)
             self.select.sort()
+
+    def greedy_(self):
+        '''
+        choose the min distance order (you can't choose dur because you don't know)
+        '''
+        if self.n >= len(self.orders):
+            self.select = [i for i in range(len(self.orders))]
+        else:
+            self.orders.sort(key=lambda x: x.d)
+            self.select = [i for i in range(self.n)]
 
 
 class Order():
@@ -40,6 +50,7 @@ class Order():
         self.dx = dx    # destination pos x
         self.dy = dy    # destination pos y
         self.delay = config.order_delay     # last time of this order
+        self.d = hamming_dis(self.sx, self.sy, self.dx, self.dy)
         if f_p == 1:
             self.p = self.price_1()         # price, initil in run method of simulator
         else:
@@ -48,17 +59,16 @@ class Order():
     def price_1(self):
         '''
         a: order data
-        p = 1.9 * max(0,(d - 2)) + 8  don't cosider time
+        p = 3.8 * max(0,(d - 1)) + 8  don't cosider time
         '''
-        d = hamming_dis(self.sx, self.sy, self.dx, self.dy)
-        return 1.9 * max(0, (d-2)) + 8
+        return 3.8 * max(0, (self.d-1)) + 8
 
 
 def random_driver_init(dis, n):
     x, y = len(dis), len(dis[0])
     samples = random_tuple(x, y, n)
     for sample in samples:
-        dis[sample[0], sample[1]].n += 1
+        dis[sample[0]][sample[1]].n += 1
 
 
 def average_driver_init(dis, n):
@@ -94,14 +104,14 @@ class Simulator():
         temp_data = [Order(a[0], a[1], a[2], a[3], a[4], a[5], f_price) for a in self.data]
         self.data = temp_data
 
-        self.total_order = self.data.shape[0]
+        self.total_order = len(self.data)
         self.n_driver_list = config.n_drivers
 
         # eval metric
         self.income = 0
         self.rep_order = 0  # responsed order
         self.n_wait = 0     # total waiting order
-        self.orr
+        self.orr = 0
 
         # others
         self.last_id = 0    # recorder the access index of data, used for get_t_order func
@@ -147,7 +157,7 @@ class Simulator():
             self.update_grid_state()
 
             # t + 1 and update the order state
-            self.update_grid_coming
+            self.update_grid_coming()
             self.t += 1
 
         print("Finish\n")
@@ -159,9 +169,11 @@ class Simulator():
         t_orders: list of Order class
         '''
         # cluster
-        dispatch_list = [[[] for i in config.N_GRID_Y] for j in config.N_GIRD_X]
+        dispatch_list = [[[] for i in range(config.N_GRID_Y)] for j in range(config.N_GIRD_X)]
         for order in t_orders:
             dispatch_list[order.sx][order.sy].append(order)
+
+        
 
         # dispatch
         for i in range(config.N_GIRD_X):
@@ -178,8 +190,8 @@ class Simulator():
                 # car comes
                 grid = self.grids[i][j]
                 # update dur
-                for i in grid.coming_list:
-                    i.dur -= 1
+                for k in grid.coming_list:
+                    k.dur -= 1
                 # sort by dur
                 grid.coming_list.sort(key=lambda x:x.dur)
                 final_order_idx = len(grid.coming_list)
@@ -193,7 +205,11 @@ class Simulator():
                 grid.coming_list = grid.coming_list[final_order_idx:]
 
                 # update waiting order delay
-                 
+                for k in grid.orders:
+                    k.delay -= 1
+                for k in range(len(grid.orders)-1, -1, -1):
+                    if grid.orders[k].delay < 0:
+                        del grid.orders[k]  # order out of time
 
 
     def update_grid_state(self):
@@ -206,13 +222,13 @@ class Simulator():
                 grid = self.grids[i][j]
                 grid.n -= len(grid.select)
                 grid.select.reverse()
-                for i in grid.select:   # order number
+                for k in grid.select:   # order number
                     # update income
-                    grid.income += grid.orders[i].p
+                    grid.income += grid.orders[k].p
                     # add to destination grid coming list
-                    self.grids[grid.orders[i].dx][grid.orders[i].dy].coming_list.append(grid.orders[i])
+                    self.grids[grid.orders[k].dx][grid.orders[k].dy].coming_list.append(grid.orders[k])
                     # remove from old
-                    del grid.orders[i]
+                    del grid.orders[k]
                 grid.select = []
 
 
@@ -221,11 +237,13 @@ class Simulator():
         eval ADI and ORR
         '''
         # ADI
+        self.income = 0
         for i in range(config.N_GIRD_X):
             for j in range(config.N_GRID_Y):
                 self.income += self.grids[i][j].income
 
         # ORR
+        self.rep_order = 0
         for i in range(self.total_order):
             if self.data[i].t_s >= self.t:
                 self.n_wait = i

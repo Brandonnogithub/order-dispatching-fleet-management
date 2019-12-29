@@ -37,3 +37,25 @@ base dis: 2 km
 price: 1.9 yuan/km
 
 night: 23:00 - 6:00 +20%
+
+## Results
+
+Random
+
+|  delay   | ADI  | ORR  
+---:|---:|---:
+1   | 369.59   | 0.9078
+2   | 370.84   | 0.9119
+
+Greedy
+
+|  delay   | ADI  | ORR  
+---:|---:|---:
+1   | 363.58   | 0.9267
+2   | 362.50   | 0.9278
+
+## To do
+
+fleet management
+
+greedy opt final day
