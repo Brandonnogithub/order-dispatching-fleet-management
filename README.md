@@ -6,7 +6,7 @@ This is the final project of my algorithm class.
 
 change gcj to wgs84
 
-## clean data
+## Clean Data
 
 remove wrong time
 
@@ -16,7 +16,7 @@ total removed: 131566
 
 remaining orders: 6934371
 
-## grid
+## Grid
 
 about 2km x 2km for each grid, 15 * 17 grids
 
@@ -24,11 +24,11 @@ range: `[[103.89325, 30.547255], [104.20675, 30.852745]]`
 
 split by degree, x(0.0209), y(0.01797)
 
-## time
+## Time
 
 time step is 10 mins(600s), all order which are finished in less 1 time step are setted as 1 time step. (About 230281 orders)
 
-## price
+## Price
 
 start step : 8
 
