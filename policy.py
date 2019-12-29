@@ -11,12 +11,15 @@ class BaseDF():
         pass
 
 
+
+
 class RandomDF(BaseDF):
     '''
     each order is randomly selected
     '''
     def __init__(self):
         super().__init__()
+        print("Random match!")
 
     def match(self, grids):
         for i in grids:
