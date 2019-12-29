@@ -6,6 +6,7 @@ import threading
 import numpy as np
 from pathlib import Path
 from gps_utils import gcj02wgs84
+from utils import write_csv, load_csv, raiseError
 
 
 lock = threading.Lock()
@@ -17,10 +18,7 @@ N_GIRD_X = 15
 D_GIRD_X = 0.0209
 N_GRID_Y = 17
 D_GIRD_Y = 0.01797
-
-
-def raiseError(content=""):
-    raise Exception(content)
+DAY = 1
 
 
 def real_time(t, day):
@@ -28,36 +26,8 @@ def real_time(t, day):
     return int((int(t) - base_time - base) / time_step)
 
 
-def load_csv(csv_path, select_list=None, headline=False):
-    '''
-    load csv data into list
-    headline: whether there is a headline
-    '''
-    res = []
-    with open(csv_path, 'r', encoding="utf8", newline="") as f_csv:
-        if headline:
-            reader = csv.DictReader(f_csv)
-        else:
-            reader = csv.reader(f_csv)
-        if select_list:
-            for row in reader:
-                temp_row = []
-                for index in select_list:
-                    temp_row.append(row[index])
-                res.append(temp_row)
-        else:
-            for row in reader:
-                res.append(row)
-    return res
-
-
-def write_csv(contents, csv_path, head_row=None):
-    '''write data into csv file. contents is a list. see the formation in load_csv()'''
-    with open(csv_path, 'w', encoding="utf8", newline="") as f_csv:
-        writer = csv.writer(f_csv)
-        if head_row is not None:
-            writer.writerow(head_row)
-        writer.writerows(contents)
+def time_without_day(t):
+    return int((int(t) - base_time) / time_step)
 
 
 def extract_tar(path):
@@ -76,11 +46,12 @@ def extract_data(path_dir="data/raw"):
 
 
 def count_n_drivers(path_dir="data/extracted"):
-    drivers = set()
+    res = []
     for _, _, files in os.walk(path_dir):
         for file_name in files:
             if file_name[0] != "g":
                 continue
+            drivers = set()
             temp_path = os.path.join(path_dir, file_name)
             content = load_csv(temp_path, select_list=[0])
             last = None
@@ -91,7 +62,9 @@ def count_n_drivers(path_dir="data/extracted"):
                     last = row[0]
                     drivers.add(row[0])
             print(len(drivers))
-    print(len(drivers)) # 1181180
+            res.append(len(drivers))
+    # print(len(drivers)) # 1181180
+    print(res)
 
 
 class CountDriverThread(threading.Thread):
@@ -433,8 +406,85 @@ def total_orders(path_dir="data/extracted"):
     print(n)    # 7065937
 
 
+def wgs2gird(x, y):
+    x = int((x - POS_RANGE[0][0]) / D_GIRD_X)
+    y = int((y - POS_RANGE[0][1]) / D_GIRD_Y)
+    return x, y
+
+
+def map_order(a):
+    '''
+    a:[t_s, t_e, x1, y1, x2, y2] string list
+    '''
+    x, y = gcj02wgs84(a[2], a[3])
+    # x, y = wgs2gird(x, y)
+    z, k = gcj02wgs84(a[4], a[5])
+    # z, k = wgs2gird(z, k)
+    return [time_without_day(int(a[0])), time_without_day(int(a[1])), x, y, z, k]
+
+
+def remove_baddata_order(c):
+    def check_range(a):
+        if a[2] >= POS_RANGE[0][0] and a[2] < POS_RANGE[1][0]:
+            if a[4] >= POS_RANGE[0][0] and a[4] < POS_RANGE[1][0]:
+                if a[3] >= POS_RANGE[0][1] and a[3] < POS_RANGE[1][1]:
+                    if a[5] >= POS_RANGE[0][1] and a[5] < POS_RANGE[1][1]:
+                        return True
+        return False
+
+    move_list = []
+    for i in range(len(c)):
+        if not check_range(c[i]):
+            move_list.append(i)
+    move_list.reverse()
+    for i in move_list:
+        del c[i]
+    return len(move_list)
+
+
+def map_grid(a):
+    a[2], a[3] = wgs2gird(a[2], a[3])
+    a[4], a[5] = wgs2gird(a[4], a[5])
+    return a
+
+
 def formalize_order_data(path_dir="data/extracted"):
+    global DAY
+    global total_removed
+    all_orders = []
+    for _, _, files in os.walk(path_dir):
+        for file_name in files:
+            if not file_name.startswith("order"):
+                continue
+            DAY = int(file_name[-2:])
+            temp_path = os.path.join(path_dir, file_name)
+            content = load_csv(temp_path, select_list=[1,2,3,4,5,6])
+            # map trans time and pos
+            content = list(map(map_order, content))
+            # remove bad data
+            total_removed += remove_baddata_order(content)
+            # map pos to grid
+            content = list(map(map_grid, content))
+            # print(content[:10])
+            # raiseError()
+            all_orders += content
+    write_csv(all_orders, "data/process/order_201611.csv")
+    print(len(all_orders))
+    print(total_removed)
     print("Finish!")
+
+
+def map_str2int(a):
+    return list(map(int, a))
+
+
+def sort_orders(path_dir="data/process/order_201611.csv"):
+    content = load_csv(path_dir)
+    content = list(map(map_str2int, content))
+    for i in range(len(content)):
+        content[i][1] = max(content[i][1] - content[i][0], 1)
+    content.sort(key=lambda x: x[0])
+    write_csv(content, path_dir)
 
 
 if __name__ == "__main__":
@@ -448,4 +498,6 @@ if __name__ == "__main__":
     # find_pos_range_thread(6)
     # find_pos_dis_thread()
     # total_orders()
+    # formalize_order_data()
+    sort_orders()
     print("Finished!")
