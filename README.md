@@ -28,7 +28,9 @@ split by degree, x(0.0209), y(0.01797)
 
 time step is 10 mins(600s), all order which are finished in less 1 time step are setted as 1 time step. (About 230281 orders)
 
-## Price
+## Order
+
+### price
 
 start step : 8
 
@@ -38,24 +40,30 @@ price: 1.9 yuan/km
 
 night: 23:00 - 6:00 +20%
 
+### delay
+
+each order lasts 1 time step
+
+## Driver Bias
+
+About 4,000 drivers in one day. But they won't be online all day. So we add a bias to driver number.
+
+n_driver = 0.3 * n_driver
+
 ## Results
 
-Random
+bias = 0.3
 
-|  delay   | ADI  | ORR  
+|     | ADI  | ORR  
 ---:|---:|---:
-1   | 369.59   | 0.9078
-2   | 370.84   | 0.9119
+random   | 303.14   | 0.7389
+greedy   | 293.04   | 0.7988
+greedy+fm1   | 304.62   | 0.7422
 
-Greedy
+some order may evry far. So the reward is large. But greedy will not choose these order.
 
-|  delay   | ADI  | ORR  
----:|---:|---:
-1   | 363.58   | 0.9267
-2   | 362.50   | 0.9278
+In greedy there are more idle time for each car So the ADI is lower than random.
 
 ## To do
 
 fleet management
-
-greedy opt final day

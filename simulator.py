@@ -13,6 +13,7 @@ class Grid():
         self.x = x  # pos x
         self.y = y  # pos y
         self.n = n  # car number
+        self.n_unman = n # unman car number
 
         self.coming_list = []   # the list cotains the coming cars of each feature time steps
         self.orders = []        # the orders in this pos
@@ -27,15 +28,32 @@ class Grid():
             self.select = sample(temp, self.n)
             self.select.sort()
 
-    def greedy_(self):
+    def greedy_(self, t_now, t_end):
         '''
         choose the min distance order (you can't choose dur because you don't know)
         '''
         if self.n >= len(self.orders):
             self.select = [i for i in range(len(self.orders))]
         else:
+            # if self.n == 0:
+            #     return  # no cars
             self.orders.sort(key=lambda x: x.d)
             self.select = [i for i in range(self.n)]
+            # count = 0 # number of selected
+            # for i in range(len(self.orders)):
+            #     if t_now + self.orders[i].dur < t_end:
+            #         self.select.append(i)
+            #         count += 1
+            #         if count == self.n:
+            #             break
+            # if count < self.n:
+            #     for i in range(len(self.orders)-1, -1, -1):
+            #         if i not in self.select:
+            #             self.select.append(i)
+            #             count += 1
+            #             if count == self.n:
+            #                 break
+            #     self.select.sort()
 
 
 class Order():
@@ -96,6 +114,7 @@ class Simulator():
         # build time line
         self.t = 0
         self.day = 1
+        self.t_end = 0
 
         # laod data
         self.data = list(map(map_str2int, load_csv(data_path)))
@@ -140,9 +159,10 @@ class Simulator():
         t_end: end time, real end time = t_end - 1
         '''
         self.policy = policy()
+        self.t_end = t_end
 
         # initial driver distribution
-        driver_init(self.grids, self.n_driver_list[self.day-1])
+        driver_init(self.grids, int(self.n_driver_list[self.day-1] * config.driver_bias))
 
         # start simulator
         while self.t < t_end:
@@ -152,7 +172,7 @@ class Simulator():
             # dispatch new order
             self.dispatch_order2grid(t_orders)
             # match order with cars
-            self.policy.match(self.grids)
+            self.policy.match(self.grids, self.t, t_end)
             # update stats
             self.update_grid_state()
 
@@ -172,8 +192,6 @@ class Simulator():
         dispatch_list = [[[] for i in range(config.N_GRID_Y)] for j in range(config.N_GIRD_X)]
         for order in t_orders:
             dispatch_list[order.sx][order.sy].append(order)
-
-        
 
         # dispatch
         for i in range(config.N_GIRD_X):
@@ -221,10 +239,16 @@ class Simulator():
                 # car leaves
                 grid = self.grids[i][j]
                 grid.n -= len(grid.select)
+                # assert grid.n >= 0
                 grid.select.reverse()
                 for k in grid.select:   # order number
                     # update income
-                    grid.income += grid.orders[k].p
+                    t_bias = (self.t + grid.orders[k].dur) - self.t_end
+                    if t_bias <= 0:
+                        t_bias = 1
+                    else:
+                        t_bias = (self.t_end - self.t) / grid.orders[k].dur
+                    grid.income += grid.orders[k].p * t_bias
                     # add to destination grid coming list
                     self.grids[grid.orders[k].dx][grid.orders[k].dy].coming_list.append(grid.orders[k])
                     # remove from old

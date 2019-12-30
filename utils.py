@@ -1,5 +1,6 @@
 import csv
 import random
+import config
 
 
 def raiseError(content=""):
@@ -67,3 +68,17 @@ def map_str2int(a):
 
 def hamming_dis(x1, y1, x2, y2):
     return abs(x1-x2) + abs(y1-y2)
+
+
+def count2xy(a):
+    ax = int(a / config.N_GRID_Y)
+    ay = a - ax * config.N_GRID_Y
+    return ax, ay
+
+
+def judge_d(a, b):
+    ax, ay = count2xy(a)
+    bx, by = count2xy(b)
+
+    d = hamming_dis(ax, ay, bx, by)
+    return d
