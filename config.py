@@ -14,3 +14,7 @@ speed_car = 3       # move 3 in each time step
 pred_future = False
 
 do_fleet = True
+
+random_state = 20191230
+
+ratio_unman = 0.5

@@ -7,7 +7,7 @@ from utils import hamming_dis, judge_d
 class MaxFlowSolver():
     def __init__(self, n):
         self.n = n
-        self.weights = np.zeros([n,n])  # n = 15*17
+        self.weights = np.zeros([n,n],dtype=np.int)  # n = 15*17
         self.weights_sink = np.zeros(n)
         
         self.residual = np.zeros([n,n])
@@ -59,5 +59,5 @@ class MaxFlowSolver():
         for j in range(self.n):
             self.weights_sink[j] = n_order[j]
 
-        self.residual = np.zeros([n,n])
-        self.residual_sink = np.zeros(n)
+        self.residual = np.zeros([self.n,self.n])
+        self.residual_sink = np.zeros(self.n)

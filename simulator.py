@@ -4,6 +4,8 @@ import random
 from random import sample
 from utils import load_csv, random_tuple, map_str2int, hamming_dis, raiseError
 
+test_n = 0
+
 
 class Grid():
     '''
@@ -14,6 +16,7 @@ class Grid():
         self.y = y  # pos y
         self.n = n  # car number
         self.n_unman = n # unman car number
+        self.unman_left = 0     # left after selecting
 
         self.coming_list = []   # the list cotains the coming cars of each feature time steps
         self.orders = []        # the orders in this pos
@@ -24,9 +27,12 @@ class Grid():
         temp = [i for i in range(len(self.orders))]
         if self.n >= len(self.orders):
             self.select = temp
+            self.unman_left = min(self.n_unman, self.n - len(self.orders))
         else:
             self.select = sample(temp, self.n)
             self.select.sort()
+            self.unman_left = 0
+        self.mark_order()
 
     def greedy_(self, t_now, t_end):
         '''
@@ -34,6 +40,7 @@ class Grid():
         '''
         if self.n >= len(self.orders):
             self.select = [i for i in range(len(self.orders))]
+            self.unman_left = min(self.n_unman, self.n - len(self.orders))
         else:
             # if self.n == 0:
             #     return  # no cars
@@ -55,12 +62,21 @@ class Grid():
             #                 break
             #     self.select.sort()
 
+            self.unman_left = 0
+        self.mark_order()
+
+    def mark_order(self):
+        # test_n += self.n_unman - self.unman_left
+        for i in range(self.n_unman - self.unman_left):
+            self.orders[self.select[i]].unman = True
+
+
 
 class Order():
     '''
     class of one order
     '''
-    def __init__(self, t_s, dur, sx, sy, dx, dy, f_p=1):
+    def __init__(self, t_s, dur, sx, sy, dx, dy, f_p=1, unman=False):
         self.t_s = t_s  # start time
         self.dur = dur  # duration
         self.sx = sx    # start pos x
@@ -69,6 +85,7 @@ class Order():
         self.dy = dy    # destination pos y
         self.delay = config.order_delay     # last time of this order
         self.d = hamming_dis(self.sx, self.sy, self.dx, self.dy)
+        self.unman = unman
         if f_p == 1:
             self.p = self.price_1()         # price, initil in run method of simulator
         else:
@@ -82,19 +99,23 @@ class Order():
         return 3.8 * max(0, (self.d-1)) + 8
 
 
-def random_driver_init(dis, n):
+def random_driver_init(dis, n, unman=False):
     x, y = len(dis), len(dis[0])
     samples = random_tuple(x, y, n)
     for sample in samples:
         dis[sample[0]][sample[1]].n += 1
+        if unman:
+            dis[sample[0]][sample[1]].n_unman += 1
 
 
-def average_driver_init(dis, n):
+def average_driver_init(dis, n, unman=False):
     x, y = len(dis), len(dis[0])
     n_grids = x * y
     base = int(n / n_grids)
     for i in range(x):
         for j in range(y):
+            if unman:
+                dis[i][j].n_unman += base
             dis[i][j].n += base
     left_d = n - n_grids * base
     random_driver_init(dis, left_d)
@@ -125,6 +146,9 @@ class Simulator():
 
         self.total_order = len(self.data)
         self.n_driver_list = config.n_drivers
+        self.n_drivers = int(self.n_driver_list[self.day-1] * config.driver_bias)
+        self.n_unmans = int(self.n_drivers * config.ratio_unman)
+        # print(self.n_unmans)
 
         # eval metric
         self.income = 0
@@ -162,7 +186,8 @@ class Simulator():
         self.t_end = t_end
 
         # initial driver distribution
-        driver_init(self.grids, int(self.n_driver_list[self.day-1] * config.driver_bias))
+        driver_init(self.grids, self.n_drivers - self.n_unmans)
+        driver_init(self.grids, self.n_unmans, unman=True)
 
         # start simulator
         while self.t < t_end:
@@ -173,12 +198,14 @@ class Simulator():
             self.dispatch_order2grid(t_orders)
             # match order with cars
             self.policy.match(self.grids, self.t, t_end)
+
             # update stats
             self.update_grid_state()
 
             # t + 1 and update the order state
             self.update_grid_coming()
             self.t += 1
+            self.check_unman()
 
         print("Finish\n")
 
@@ -217,6 +244,8 @@ class Simulator():
                     if grid.coming_list[k].dur != 0:   # not reaches
                         final_order_idx = k
                         break
+                    elif grid.coming_list[k].unman:
+                        grid.n_unman += 1
                 # car number update
                 grid.n += final_order_idx
                 # coming list update
@@ -239,6 +268,8 @@ class Simulator():
                 # car leaves
                 grid = self.grids[i][j]
                 grid.n -= len(grid.select)
+                grid.n_unman = grid.unman_left
+                grid.unman_left = 0
                 # assert grid.n >= 0
                 grid.select.reverse()
                 for k in grid.select:   # order number
@@ -254,6 +285,17 @@ class Simulator():
                     # remove from old
                     del grid.orders[k]
                 grid.select = []
+
+
+    def check_unman(self):
+        res = 0
+        for i in range(config.N_GIRD_X):
+            for j in range(config.N_GRID_Y):
+                res += self.grids[i][j].n_unman
+                for order in self.grids[i][j].coming_list:
+                    if order.unman:
+                        res += 1
+        assert res == self.n_unmans, res
 
 
     def eval(self):
