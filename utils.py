@@ -82,3 +82,8 @@ def judge_d(a, b):
 
     d = hamming_dis(ax, ay, bx, by)
     return d
+
+
+if __name__ == "__main__":
+    for i in range(20):
+        print(count2xy(i))

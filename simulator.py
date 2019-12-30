@@ -38,37 +38,24 @@ class Grid():
         '''
         choose the min distance order (you can't choose dur because you don't know)
         '''
+        # print(self.n_unman)
         if self.n >= len(self.orders):
             self.select = [i for i in range(len(self.orders))]
             self.unman_left = min(self.n_unman, self.n - len(self.orders))
         else:
-            # if self.n == 0:
-            #     return  # no cars
             self.orders.sort(key=lambda x: x.d)
             self.select = [i for i in range(self.n)]
-            # count = 0 # number of selected
-            # for i in range(len(self.orders)):
-            #     if t_now + self.orders[i].dur < t_end:
-            #         self.select.append(i)
-            #         count += 1
-            #         if count == self.n:
-            #             break
-            # if count < self.n:
-            #     for i in range(len(self.orders)-1, -1, -1):
-            #         if i not in self.select:
-            #             self.select.append(i)
-            #             count += 1
-            #             if count == self.n:
-            #                 break
-            #     self.select.sort()
-
             self.unman_left = 0
+        # print(self.unman_left)
         self.mark_order()
 
     def mark_order(self):
         # test_n += self.n_unman - self.unman_left
         for i in range(self.n_unman - self.unman_left):
+            if self.orders[self.select[i]].unman:
+                raiseError()
             self.orders[self.select[i]].unman = True
+        # config.count += (self.n_unman - self.unman_left)
 
 
 
@@ -122,9 +109,22 @@ def average_driver_init(dis, n, unman=False):
     assert np.sum(dis) == n, "Distribution wrong by average!"
 
 
-def gaussian_driver_init(dis, n):
-    pass
+def gen_normal(a):
+    while(True):
+        c = abs(random.normalvariate(0,1)) * a
+        c = int(c)
+        if c < a:
+            return c
 
+
+def gaussian_driver_init(dis, n, unman=False):
+    x, y = len(dis), len(dis[0])
+    for i in range(n):
+        a = gen_normal(x)
+        b = gen_normal(y)
+        dis[a][b].n += 1
+        if unman:
+            dis[a][b].n_unman += 1
 
 
 class Simulator():
@@ -198,14 +198,14 @@ class Simulator():
             self.dispatch_order2grid(t_orders)
             # match order with cars
             self.policy.match(self.grids, self.t, t_end)
-
+            # self.check_unman(with_left=True)
             # update stats
             self.update_grid_state()
-
+            # self.check_unman()
             # t + 1 and update the order state
             self.update_grid_coming()
             self.t += 1
-            self.check_unman()
+            # self.check_unman()
 
         print("Finish\n")
 
@@ -287,14 +287,21 @@ class Simulator():
                 grid.select = []
 
 
-    def check_unman(self):
+    def check_unman(self, with_left=False):
         res = 0
         for i in range(config.N_GIRD_X):
             for j in range(config.N_GRID_Y):
-                res += self.grids[i][j].n_unman
+                if with_left:
+                    res += self.grids[i][j].unman_left
+                else:
+                    res += self.grids[i][j].n_unman
                 for order in self.grids[i][j].coming_list:
                     if order.unman:
                         res += 1
+                if with_left:
+                    for k in self.grids[i][j].select:
+                        if grids[i][j].orders[k].unman:
+                            res += 1
         assert res == self.n_unmans, res
 
 
