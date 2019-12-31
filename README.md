@@ -1,6 +1,6 @@
 # order-dispatching-fleet-management
 
-This is the final project of my algorithm course. In this project we use a min-distance greedy + maxflow-based fleet management algorithm to improve the accumumalted income(ADI) and order repronse rate.
+This is the final project of my algorithm course. In this project we use a min-distance greedy + maxflow-based fleet management algorithm to improve the accumumalted income(**ADI**) and order repronse rate(**ORR**).
 
 ## Requirement
 
