@@ -9,7 +9,7 @@ N_GIRD_X = 15
 N_GRID_Y = 17
 
 # the real number of drivers in one day
-driver_bias = 0.3 * 0.5
+driver_bias = 0.3 * 0.1
 
 # move 3 in each time step
 speed_car = 3

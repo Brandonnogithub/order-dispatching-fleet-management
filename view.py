@@ -20,11 +20,11 @@ def view(x, y1, y2, y3=None, name=None, a=None, b=None, pos="upper right"):
 
 
 def main():
-    adi_x = [0.1, 0.3, 0.5, 0.7, 0.9]
-    adi_y_random = [199.99, 306.92, 337.27, 354.23, 366.05]
-    adi_y_greedy = [205.76, 294.85, 326.90, 346.86, 359.26]
-    adi_y_greedy_fm = [268.15, 382.73, 388.18, 391.13, 393.99]
-    view(adi_x, adi_y_random, adi_y_greedy, adi_y_greedy_fm, ["random", "greedy", "greedy+fm"], "bias", "ADI", pos="lower right")
+    # adi_x = [0.1, 0.3, 0.5, 0.7, 0.9]
+    # adi_y_random = [199.99, 306.92, 337.27, 354.23, 366.05]
+    # adi_y_greedy = [205.76, 294.85, 326.90, 346.86, 359.26]
+    # adi_y_greedy_fm = [268.15, 382.73, 388.18, 391.13, 393.99]
+    # view(adi_x, adi_y_random, adi_y_greedy, adi_y_greedy_fm, ["random", "greedy", "greedy+fm"], "bias", "ADI", pos="lower right")
 
     # adi_x = [0.1, 0.3, 0.5, 0.7, 0.9]
     # adi_y_random = [0.4843, 0.7484, 0.8260, 0.8689, 0.8996]
@@ -32,15 +32,15 @@ def main():
     # adi_y_greedy_fm = [0.7683, 0.9692, 0.9772, 0.9815, 0.9857]
     # view(adi_x, adi_y_random, adi_y_greedy, adi_y_greedy_fm, ["random", "greedy", "greedy+fm"], "bias", "ORR", pos="lower right")    
 
-    # adi_x = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-    # adi_y_greedy_fm = [361.48, 373.56, 378.58, 381.47, 383.26, 384.05]
-    # y_base = [382.73, 382.73, 382.73, 382.73, 382.73, 382.73]
+    # adi_x = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    # adi_y_greedy_fm = [103.83, 192.17, 269.16, 328.31, 361.48, 373.56, 378.58, 381.47, 383.26, 384.05]
+    # y_base = [382.73, 382.73, 382.73, 382.73, 382.73, 382.73, 382.73, 382.73, 382.73, 382.73]
     # view(adi_x, adi_y_greedy_fm, y_base, name=["greedy+fm", "half unman"], a="driver ratio", b="ADI", pos="lower right")
 
-    # adi_x = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-    # adi_y_greedy_fm = [0.9359, 0.9554, 0.9633, 0.9675, 0.9701, 0.9712]
-    # y_base = [0.9692, 0.9692, 0.9692, 0.9692, 0.9692, 0.9692]
-    # view(adi_x, adi_y_greedy_fm, y_base, name=["greedy+fm", "half unman"], a="driver ratio", b="ORR", pos="lower right")
+    adi_x = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    adi_y_greedy_fm = [0.3970, 0.6205, 0.7737, 0.8797, 0.9359, 0.9554, 0.9633, 0.9675, 0.9701, 0.9712]
+    y_base = [0.9692, 0.9692, 0.9692, 0.9692, 0.9692, 0.9692, 0.9692, 0.9692, 0.9692, 0.9692]
+    view(adi_x, adi_y_greedy_fm, y_base, name=["greedy+fm", "half unman"], a="driver ratio", b="ORR", pos="lower right")
 
 
 if __name__ == "__main__":
