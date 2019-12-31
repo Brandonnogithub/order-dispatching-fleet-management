@@ -1,12 +1,37 @@
 # order-dispatching-fleet-management
 
-This is the final project of my algorithm class.
+This is the final project of my algorithm course. In this project we use a min-distance greedy + maxflow-based fleet management algorithm to improve the accumumalted income(ADI) and order repronse rate.
 
-## GPS
+## Requirement
 
-change gcj to wgs84
+* python 3.6
+* numpy
+
+## Explain for each file
+
+* **/pic**: the result diagrams
+* **/report**: our report
+* **config.py**: the config file. you can change settings like dirver number here
+* **data_process.py**: autoprocess data for simulation
+* **gps_utils.py**: change gcj postion into wgs84 positiion
+* **main.py**: the main function is here. You can change policy method in main
+* **maxflow_solver.py**: a class to solve maxflow problem. But in the project the maxflow problem is special, I didn't implement this solver in standard way.(Which means you can't use this to solve other problem). Good news is this is much faster.
+* **policy.py**: Here includes all policies:random and greedy. You can add new policy success from the base class.
+* **simulator.py**: a simulator to simulate the real world
+* **utils.py**: some utils function
+* **view.py**: visualize the results and save pic to /pic
+* **README.md**: which you are looking :)
 
 ## Clean Data
+
+Data can be download from [didi](<https://outreach.didichuxing.com/app-vue/dataList>)
+
+You just need to put data in the right position and run
+
+```python
+formalize_order_data()
+sort_orders()
+```
 
 remove wrong time
 
@@ -70,6 +95,8 @@ random      | 0.4843 | 0.7484 | 0.8260 | 0.8689 | 0.8996
 greedy      | 0.6357 | 0.8024 | 0.8613 | 0.8973 | 0.9196
 greedy+fm   | **0.7683** | **0.9692** | **0.9772** | **0.9815** | **0.9857**
 
+In greedy there are more idle time for each car So the ADI is lower than random.
+
 bias = 0.3, ratio_unman = 1, greedy+fm
 
 | driver ratio  | 0.1    |0.2    | 0.3    | 0.4    | 0.5    | 0.6    | 0.7    | 0.8    | 0.9    | 1
@@ -77,9 +104,9 @@ bias = 0.3, ratio_unman = 1, greedy+fm
 ADI             | 103.83 | 192.17 | 269.16 | 328.31 | 361.48 | 373.56 | 378.58 | 381.47 | 383.26 | **384.05**
 ORR             | 0.3970 | 0.6205 | 0.7737 | 0.8797 | 0.9359 | 0.9554 | 0.9633 | 0.9675 | 0.9701 | **0.9712**
 
-some order may evry far. So the reward is large. But greedy will not choose these order.
+It show if we replace all cars with unman cars, keeping about **86\%** car numbers can get the same performance.
 
-In greedy there are more idle time for each car So the ADI is lower than random.
+And even you use only 50\% cars the performance is still good.(Unman is the future!)
 
 ## To do
 
