@@ -323,7 +323,10 @@ class Simulator():
                 break
             if self.data[i].delay >= 0:
                 self.rep_order += 1
-        self.orr = self.rep_order / self.n_wait
+        if self.n_wait == 0:
+            self.orr = 1
+        else:
+            self.orr = self.rep_order / self.n_wait
 
         print("ADI is %d" % self.income)
         print("ORR is %.4f" % self.orr)
